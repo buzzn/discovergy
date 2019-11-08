@@ -95,7 +95,8 @@ class Discovergy:
         :param verifier: the verifier obtained from calling
         _fetch_request_token()
         _authorize_request_token() 
-        :return: dict with keys 'token' and 'token_secret' on success, False otherwise """
+        :return: 'token' and 'token_secret' on success, False otherwise
+        :rtype: dict """
 
         try:
             access_token_oauth = OAuth1Session(self._oauth_key,
@@ -111,7 +112,7 @@ class Discovergy:
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
-            return False
+            return None
 
     def login(self, email, password):
         """ Authentication workflow for client account.
