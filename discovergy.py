@@ -5,7 +5,8 @@ from rauth import OAuth1Service
 from urllib.parse import urlencode
 
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
+TIMEOUT = 10
 
 
 class Discovergy:
@@ -23,19 +24,29 @@ class Discovergy:
         self._consumer_key = ""
         self._consumer_secret = ""
         self._discovergy_oauth = None
-        self._base_url = 'https://api.discovergy.com/public/v1/'
-        self._consumer_token_url = self._base_url + 'oauth1/consumer_token'
-# # Get consumer key and secret (not part of OAuth 1.0)
-# response = requests.post(url=consumer_token_url, data={'client': client_name})
-# if not response:
-#     print("Error during consumer_token Request")
-#     print("HTTP Status Code: %s" % response.status_code)
-#     print("HTTP Response: %s" % response.content)
-# consumer_key = response.json()['key']
-# consumer_secret = response.json()['secret']
-# print("Consumer Key: %s" % consumer_key)
-# print("Consumer Secret: %s" % consumer_secret)
-#
+        self._base_url = 'https://api.discovergy.com/public/v1'
+        self._consumer_token_url = self._base_url + '/oauth1/consumer_token'
+        self._request_token_url = self._base_url + '/oauth1/request_token'
+        self._authorization_base_url = self._base_url + '/oauth1/authorize'
+        self._access_token_url = self._base_url + '/oauth1/access_token'
+
+    def _fetch_consumer_tokens(self):
+        """ Get consumer key and secret (not part of OAuth 1.0). 
+        :return: requests.models.response on success, False otherwise  """
+
+        try:
+            response = requests.post(url=self._consumer_token_url,
+                                     data={'client': self._client_name},
+                                     headers={},
+                                     timeout=TIMEOUT)
+            self._oauth_key = response.json()['key']
+            self._oauth_secret = response.json()['secret']
+            return response
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % e)
+            return False
+
 # discovergy = OAuth1Service(
 #     name='discovergy',
 #     consumer_key=consumer_key,
