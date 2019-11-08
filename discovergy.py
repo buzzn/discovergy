@@ -1,6 +1,7 @@
 import json
 import logging
 import requests
+from requests_oauthlib import OAuth1Session
 from rauth import OAuth1Service
 from urllib.parse import urlencode
 
@@ -42,6 +43,25 @@ class Discovergy:
             self._oauth_key = response.json()['key']
             self._oauth_secret = response.json()['secret']
             return response
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % e)
+            return False
+
+    def _fetch_request_token(self):
+        """ Get OAuth1 request token.
+        :return: dict with keys 'token' and 'token_secret', False otherwise """
+
+        try:
+            request_token_oauth = OAuth1Session(self._oauth_key,
+                                                client_secret=self._oauth_secret,
+                                                callback_uri='oob')
+            oauth_token_response = request_token_oauth.fetch_request_token(
+                self._request_token_url)
+            result = {"token": oauth_token_response.get('oauth_token'),
+                      "token_secret": oauth_token_response.get('oauth_token_secret')}
+            print(result)
+            return result
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
