@@ -2,7 +2,6 @@ import json
 import logging
 import requests
 from requests_oauthlib import OAuth1Session
-from rauth import OAuth1Service
 from urllib.parse import urlencode
 
 
