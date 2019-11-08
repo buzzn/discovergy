@@ -2,7 +2,8 @@ import json
 import logging
 import requests
 from requests_oauthlib import OAuth1Session
-from urllib.parse import urlencode
+from urllib.parse import urlencode, parse_qs
+import sys
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,8 +49,8 @@ class Discovergy:
             return False
 
     def _fetch_request_token(self):
-        """ Get OAuth1 request token.
-        :return: dict with keys 'token' and 'token_secret', False otherwise """
+        """ Get OAuth request token.
+        :return: dict with keys 'token' and 'token_secret' on success, False otherwise """
 
         try:
             request_token_oauth = OAuth1Session(self._oauth_key,
@@ -59,28 +60,29 @@ class Discovergy:
                 self._request_token_url)
             result = {"token": oauth_token_response.get('oauth_token'),
                       "token_secret": oauth_token_response.get('oauth_token_secret')}
-            print(result)
             return result
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
             return False
 
-# discovergy = OAuth1Service(
-#     name='discovergy',
-#     consumer_key=consumer_key,
-#     consumer_secret=consumer_secret,
-#     request_token_url=base_url + 'oauth1/request_token',
-#     access_token_url=base_url + 'oauth1/access_token',
-#     authorize_url=base_url + 'oauth1/authorize',
-#     base_url=base_url)
-#
-# # Get OAuth request token
-# request_token, request_token_secret = discovergy.get_request_token(
-#     method='POST')
-# print("Request Token: %s" % request_token)
-# print("Request Token Secret: %s" % request_token_secret)
-#
+    def _authorize_request_token(self, email, password, resource_owner_key):
+        """ Authorize request token for client account. 
+        :return: string OAuth verifier on success, False otherwise """
+
+        try:
+            url = self._authorization_base_url + "?oauth_token=" + \
+                resource_owner_key + "&email=" + email + "&password=" + password
+            response = requests.get(url, headers={}, timeout=TIMEOUT)
+            parsed_response = parse_qs(response.content.decode('utf-8'))
+            verifier = parsed_response["oauth_verifier"][0]
+            return verifier
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % e)
+            return False
+
+
 # # Call authorize URL with email and password to get OAuth verifier
 # authorize_url = discovergy.get_authorize_url(request_token)
 # authorize_url += '&' + urlencode({'email': email, 'password': password})
