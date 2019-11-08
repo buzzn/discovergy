@@ -67,7 +67,11 @@ class Discovergy:
             return False
 
     def _authorize_request_token(self, email, password, resource_owner_key):
-        """ Authorize request token for client account. 
+        """ Authorize request token for client account.
+        :param email: the username/email of the client account
+        :param password: the password of the client account
+        :param resource_owner_key: the resource owner key obtained from calling
+        _fetch_request_token()
         :return: string OAuth verifier on success, False otherwise """
 
         try:
@@ -82,23 +86,32 @@ class Discovergy:
             _LOGGER.error("Exception: %s" % e)
             return False
 
+    def _fetch_access_token(self, resource_owner_key, resource_owner_secret,
+                            verifier):
+        """ Get OAuth access token. 
+        :param resource_owner_key: the resource owner key obtained from calling 
+        :param resouce_owner_secret: the resource owner secret obtained from
+        calling _fetch_request_token()
+        :param verifier: the verifier obtained from calling
+        _fetch_request_token()
+        _authorize_request_token() 
+        :return: dict with keys 'token' and 'token_secret' on success, False otherwise """
 
-# # Call authorize URL with email and password to get OAuth verifier
-# authorize_url = discovergy.get_authorize_url(request_token)
-# authorize_url += '&' + urlencode({'email': email, 'password': password})
-# print("Authorize URL: %s" % authorize_url)
-#
-# response = requests.get(url=authorize_url)
-# if not response:
-#     print("Error during authorize_url Request")
-#     print("HTTP Status Code: %s" % response.status_code)
-#     print("HTTP Response: %s" % response.content)
-#
-# idx = str(response.content).find('oauth_verifier=')
-# if idx > -1:
-#     oauth_verifier = str(response.content)[idx + 15:-1]
-# print("OAuth Verifier: %s" % oauth_verifier)
-#
+        try:
+            access_token_oauth = OAuth1Session(self._oauth_key,
+                                               client_secret=self._oauth_secret,
+                                               resource_owner_key=resource_owner_key,
+                                               resource_owner_secret=resource_owner_secret,
+                                               verifier=verifier)
+            oauth_tokens = access_token_oauth.fetch_access_token(
+                self._access_token_url)
+            result = {"token": oauth_tokens.get('oauth_token'),
+                      "token_secret": oauth_tokens.get('oauth_token_secret')}
+            return result
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % e)
+            return False
 # # Get OAuth access token
 # session = discovergy.get_auth_session(request_token,
 #                                       request_token_secret,
