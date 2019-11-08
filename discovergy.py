@@ -68,8 +68,8 @@ class Discovergy:
 
     def _authorize_request_token(self, email, password, resource_owner_key):
         """ Authorize request token for client account.
-        :param email: the username/email of the client account
-        :param password: the password of the client account
+        :param str email: the username/email of the client account
+        :param str password: the password of the client account
         :param resource_owner_key: the resource owner key obtained from calling
         _fetch_request_token()
         :return: string OAuth verifier on success, False otherwise """
@@ -112,14 +112,42 @@ class Discovergy:
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
             return False
-# # Get OAuth access token
-# session = discovergy.get_auth_session(request_token,
-#                                       request_token_secret,
-#                                       method='POST',
-#                                       data={'oauth_verifier': oauth_verifier})
-# print("Access Token: %s" % session.access_token)
-# print("Access Token Secret: %s" % session.access_token_secret)
-#
+
+    def login(self, email, password):
+        """Authentication workflow for client account.
+        :param str email: the username/email of the client account
+        :param str password: the password of the client account
+        :rtype bool """
+
+        try:
+            self._fetch_consumer_tokens()
+            request_tokens = self._fetch_request_token()
+            resource_owner_key = request_tokens["token"]
+            resource_owner_secret = request_tokens["token_secret"]
+            verifier = self._authorize_request_token(email, password,
+                                                     resource_owner_key)
+            access_token = self._fetch_access_token(resource_owner_key,
+                                                    resource_owner_secret,
+                                                    verifier)
+            resource_owner_key = access_token["token"]
+            resource_owner_secret = access_token["token_secret"]
+            self._discovergy_oauth = OAuth1Session(self._oauth_key,
+                                                   client_secret=self._oauth_secret,
+                                                   resource_owner_key=resource_owner_key,
+                                                   resource_owner_secret=resource_owner_secret)
+
+        except requests.exceptions.HTTPError as e:
+            _LOGGER.error("HTTPError: %s" % s)
+            return False
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % s)
+            return False
+
+        else:
+            return True
+
+
 # r = session.get(base_url + 'meters', header_auth=True)
 # my_json = r.content.decode('utf-8')
 # data = json.loads(my_json)
