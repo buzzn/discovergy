@@ -114,7 +114,7 @@ class Discovergy:
             return False
 
     def login(self, email, password):
-        """Authentication workflow for client account.
+        """ Authentication workflow for client account.
         :param str email: the username/email of the client account
         :param str password: the password of the client account
         :rtype bool """
@@ -147,9 +147,15 @@ class Discovergy:
         else:
             return True
 
+    def get_meters(self):
+        """ Get all meters for client account. 
+        :return: meters
+        :rtype: list[dict]"""
 
-# r = session.get(base_url + 'meters', header_auth=True)
-# my_json = r.content.decode('utf-8')
-# data = json.loads(my_json)
-# s = json.dumps(data, indent=4, sort_keys=True)
-# print(s)
+        try:
+            response = self._discovergy_oauth.get(self._base_url + "/meters")
+            meters = json.loads(response.content.decode('utf-8'))
+            return meters
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % e)
