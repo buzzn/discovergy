@@ -1,9 +1,9 @@
+import datetime
 import json
 import logging
 import requests
 from requests_oauthlib import OAuth1Session
 from urllib.parse import urlencode, parse_qs
-import sys
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class Discovergy:
         self._access_token_url = self._base_url + '/oauth1/access_token'
 
     def _fetch_consumer_tokens(self):
-        """ Get consumer key and secret (not part of OAuth 1.0). 
+        """ Get consumer key and secret (not part of OAuth 1.0).
         :return: requests.models.response on success, False otherwise  """
 
         try:
@@ -88,13 +88,13 @@ class Discovergy:
 
     def _fetch_access_token(self, resource_owner_key, resource_owner_secret,
                             verifier):
-        """ Get OAuth access token. 
-        :param resource_owner_key: the resource owner key obtained from calling 
+        """ Get OAuth access token.
+        :param resource_owner_key: the resource owner key obtained from calling
         :param resouce_owner_secret: the resource owner secret obtained from
         calling _fetch_request_token()
         :param verifier: the verifier obtained from calling
         _fetch_request_token()
-        _authorize_request_token() 
+        _authorize_request_token()
         :return: 'token' and 'token_secret' on success, False otherwise
         :rtype: dict """
 
@@ -118,7 +118,7 @@ class Discovergy:
         """ Authentication workflow for client account.
         :param str email: the username/email of the client account
         :param str password: the password of the client account
-        :rtype bool """
+        :rtype: bool """
 
         try:
             self._fetch_consumer_tokens()
@@ -149,7 +149,7 @@ class Discovergy:
             return True
 
     def get_meters(self):
-        """ Get all meters for client account. 
+        """ Get all meters for client account.
         :return: meters
         :rtype: list[dict]"""
 
@@ -157,6 +157,40 @@ class Discovergy:
             response = self._discovergy_oauth.get(self._base_url + "/meters")
             meters = json.loads(response.content.decode('utf-8'))
             return meters
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % e)
+
+    def get_fieldnames_for_meter(self, meterId):
+        """ Return the available measurement field names for the specified
+        meter.
+        :param str meterId: identifier of the meter to get readings for
+        :return: fieldnames
+        :rtype: [string] """
+
+        try:
+            response = self._discovergy_oauth.get(self._base_url +
+                                                  "/field_names?meterId=" +
+                                                  meterId)
+            fieldnames = json.loads(response.content.decode("utf-8"))
+            return fieldnames
+
+        except Exception as e:
+            _LOGGER.error("Exception: " + str(e))
+
+    def get_last_reading(self, meterId):
+        """ Return the last measurement for the specified meter.
+        :param str meterId: identifier of the meter to get readings for
+        :return: measurement
+        :rtype: dict """
+
+        # example response: {'time': 1573475500086, 'values': {'power': 12350, 'power3': 3660, 'energyOut': 0, 'power1': 1240, 'energy': 59650549129000, 'power2': 7450}}
+
+        try:
+            response = self._discovergy_oauth.get(
+                self._base_url + "/last_reading?meterId=" + meterId)
+            measurement = json.loads(response.content.decode("utf-8"))
+            return measurement
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
