@@ -33,7 +33,8 @@ class Discovergy:
 
     def _fetch_consumer_tokens(self):
         """ Get consumer key and secret (not part of OAuth 1.0).
-        :return: requests.models.response on success, False otherwise  """
+        :return: <Response [200]> on success, None otherwise  
+        :rtype: requests.models.response """
 
         try:
             response = requests.post(url=self._consumer_token_url,
@@ -46,11 +47,12 @@ class Discovergy:
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
-            return False
+            return None
 
     def _fetch_request_token(self):
         """ Get OAuth request token.
-        :return: dict with keys 'token' and 'token_secret' on success, False otherwise """
+        :return: token and token_secret on success, None otherwise 
+        :rtype: dict """
 
         try:
             request_token_oauth = OAuth1Session(self._oauth_key,
@@ -64,7 +66,7 @@ class Discovergy:
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
-            return False
+            return None
 
     def _authorize_request_token(self, email, password, resource_owner_key):
         """ Authorize request token for client account.
@@ -72,7 +74,8 @@ class Discovergy:
         :param str password: the password of the client account
         :param resource_owner_key: the resource owner key obtained from calling
         _fetch_request_token()
-        :return: string OAuth verifier on success, False otherwise """
+        :return: OAuth verifier on success, "" otherwise 
+        :rtype:  str """
 
         try:
             url = self._authorization_base_url + "?oauth_token=" + \
@@ -84,7 +87,7 @@ class Discovergy:
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
-            return False
+            return ""
 
     def _fetch_access_token(self, resource_owner_key, resource_owner_secret,
                             verifier):
@@ -95,7 +98,7 @@ class Discovergy:
         :param verifier: the verifier obtained from calling
         _fetch_request_token()
         _authorize_request_token()
-        :return: 'token' and 'token_secret' on success, False otherwise
+        :return: token and token_secret on success, None otherwise
         :rtype: dict """
 
         try:
@@ -118,6 +121,7 @@ class Discovergy:
         """ Authentication workflow for client account.
         :param str email: the username/email of the client account
         :param str password: the password of the client account
+        :return: True on success, False on failure
         :rtype: bool """
 
         try:
@@ -160,6 +164,7 @@ class Discovergy:
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
+            return []
 
     def get_fieldnames_for_meter(self, meterId):
         """ Return the available measurement field names for the specified
@@ -177,14 +182,16 @@ class Discovergy:
 
         except Exception as e:
             _LOGGER.error("Exception: " + str(e))
+            return []
 
     def get_last_reading(self, meterId):
         """ Return the last measurement for the specified meter.
         :param str meterId: identifier of the meter to get readings for
-        :return: measurement
+        :return: 'time' as UNIX timestamp, 'power' in mW, 'power1' - 'powern'
+        for disaggregated energy consumers, 'energyOut', 'energy' in kWh
         :rtype: dict """
 
-        # example response: {'time': 1573475500086, 'values': {'power': 12350, 'power3': 3660, 'energyOut': 0, 'power1': 1240, 'energy': 59650549129000, 'power2': 7450}}
+        # TODO - clarify energy unit
 
         try:
             response = self._discovergy_oauth.get(
@@ -194,3 +201,4 @@ class Discovergy:
 
         except Exception as e:
             _LOGGER.error("Exception: %s" % e)
+            return None
