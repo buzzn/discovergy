@@ -95,9 +95,7 @@ class Discovergy:
         :param resource_owner_key: the resource owner key obtained from calling
         :param resouce_owner_secret: the resource owner secret obtained from
         calling _fetch_request_token()
-        :param verifier: the verifier obtained from calling
-        _fetch_request_token()
-        _authorize_request_token()
+        :param verifier: the verifier obtained from calling _authorize_request_token()
         :return: token and token_secret on success, None otherwise
         :rtype: dict """
 
@@ -187,15 +185,33 @@ class Discovergy:
     def get_last_reading(self, meterId):
         """ Return the last measurement for the specified meter.
         :param str meterId: identifier of the meter to get readings for
-        :return: 'time' as UNIX timestamp, 'power' in mW, 'power1' - 'powern'
-        for disaggregated energy consumers, 'energyOut', 'energy' in kWh
+        :return: 'time' as unix milliseconds timestamp, 'power' in mW, 'power1' - 'powern'
+        for disaggregated energy consumers, 'energyOut', 'energy' in mWh
         :rtype: dict """
-
-        # TODO - clarify energy unit
 
         try:
             response = self._discovergy_oauth.get(
                 self._base_url + "/last_reading?meterId=" + meterId)
+            measurement = json.loads(response.content.decode("utf-8"))
+            return measurement
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % e)
+            return None
+
+    def get_disaggregation(self, meterId, start):
+        """ Return the disaggregation for the specified meter in the given
+        interval.
+        :param str meterId: identifier of the meter to get readings for
+        :param int start: start of interval as unix milliseconds timestamp
+        :return: existing measurements for the specified meter in μWh per device
+        :rtype: dict """
+
+        try:
+            response = self._discovergy_oauth.get(self._base_url +
+                                                  "/disaggregation?meterId=" +
+                                                  meterId + "&from=" +
+                                                  str(start))
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
 
