@@ -1,9 +1,8 @@
-import datetime
 import json
 import logging
+from urllib.parse import parse_qs
 import requests
 from requests_oauthlib import OAuth1Session
-from urllib.parse import urlencode, parse_qs
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,8 +13,7 @@ class Discovergy:
     """ Main class to query the Discovergy API. """
 
     def __init__(self, client_name):
-        """
-        Inititalize Discovergy class.
+        """ Inititalize Discovergy class.
         :param client_name: client name for OAuth process
         """
 
@@ -30,6 +28,8 @@ class Discovergy:
         self._request_token_url = self._base_url + '/oauth1/request_token'
         self._authorization_base_url = self._base_url + '/oauth1/authorize'
         self._access_token_url = self._base_url + '/oauth1/access_token'
+        self._oauth_key = None
+        self._oauth_secret = None
 
     def _fetch_consumer_tokens(self):
         """ Get consumer key and secret (not part of OAuth 1.0).
@@ -46,7 +46,7 @@ class Discovergy:
             return response
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return None
 
     def _fetch_request_token(self):
@@ -65,7 +65,7 @@ class Discovergy:
             return result
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return None
 
     def _authorize_request_token(self, email, password, resource_owner_key):
@@ -86,7 +86,7 @@ class Discovergy:
             return verifier
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return ""
 
     def _fetch_access_token(self, resource_owner_key, resource_owner_secret,
@@ -112,7 +112,7 @@ class Discovergy:
             return result
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return None
 
     def login(self, email, password):
@@ -140,11 +140,11 @@ class Discovergy:
                                                    resource_owner_secret=resource_owner_secret)
 
         except requests.exceptions.HTTPError as e:
-            _LOGGER.error("HTTPError: %s" % e)
+            _LOGGER.error("HTTPError: %s", e)
             return False
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return False
 
         else:
@@ -161,48 +161,48 @@ class Discovergy:
             return meters
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return []
 
-    def get_fieldnames_for_meter(self, meterId):
+    def get_fieldnames_for_meter(self, meter_id):
         """ Return the available measurement field names for the specified
         meter.
-        :param str meterId: identifier of the meter to get readings for
+        :param str meter_id: identifier of the meter to get readings for
         :return: fieldnames
         :rtype: [string] """
 
         try:
             response = self._discovergy_oauth.get(self._base_url +
                                                   "/field_names?meterId=" +
-                                                  meterId)
+                                                  meter_id)
             fieldnames = json.loads(response.content.decode("utf-8"))
             return fieldnames
 
         except Exception as e:
-            _LOGGER.error("Exception: " + str(e))
+            _LOGGER.error("Exception: %s", str(e))
             return []
 
-    def get_last_reading(self, meterId):
+    def get_last_reading(self, meter_id):
         """ Return the last measurement for the specified meter.
-        :param str meterId: identifier of the meter to get readings for
+        :param str meter_id: identifier of the meter to get readings for
         :return: 'time' as unix milliseconds timestamp, 'power' in mW, 'power1' - 'powern'
         for disaggregated energy consumers, 'energyOut', 'energy' in mWh
         :rtype: dict """
 
         try:
             response = self._discovergy_oauth.get(
-                self._base_url + "/last_reading?meterId=" + meterId)
+                self._base_url + "/last_reading?meterId=" + meter_id)
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return None
 
-    def get_disaggregation(self, meterId, start):
+    def get_disaggregation(self, meter_id, start):
         """ Return the disaggregation for the specified meter in the specified
         time interval.
-        :param str meterId: identifier of the meter to get readings for
+        :param str meter_id: identifier of the meter to get readings for
         :param int start: start of interval as unix milliseconds timestamp
         :return: existing measurements for the specified meter in μWh per device
         :rtype: dict """
@@ -210,39 +210,38 @@ class Discovergy:
         try:
             response = self._discovergy_oauth.get(self._base_url +
                                                   "/disaggregation?meterId=" +
-                                                  meterId + "&from=" +
+                                                  meter_id + "&from=" +
                                                   str(start))
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return None
 
-    def get_readings(self, meterId, start, resolution):
+    def get_readings(self, meter_id, start, resolution):
         """ Return the measurements for the specified meter in the specified
         time interval.
-        :param str meterId: identifier of the meter to get readings for
+        :param str meter_id: identifier of the meter to get readings for
         :param int start: start of interval as unix milliseconds timestamp
         :param str resolution: time distance between returned
         readings with possible values 'raw', 'three_minutes',
         'fifteen_minutes', 'one_hour', 'one_day', 'one_week', 'one_month',
         'one_year'
-        :return: each measurement as 'time' as unix milliseconds timestamp, 'power' in mW, 'power1' - 'powern'
+        :return: each measurement as 'time' as unix milliseconds timestamp,
+        'power' in mW, 'power1' - 'powern'
         for disaggregated energy consumers, 'energyOut', 'energy' in mWh
         :rtype: list[dict] """
 
         try:
-            print(resolution)
             response = self._discovergy_oauth.get(self._base_url +
                                                   "/readings?meterId=" +
-                                                  meterId + "&from=" +
+                                                  meter_id + "&from=" +
                                                   str(start) +
                                                   "&resolution=" + resolution)
-            # print(response.content)
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % e)
+            _LOGGER.error("Exception: %s", e)
             return None
