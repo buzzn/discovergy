@@ -33,7 +33,7 @@ class Discovergy:
 
     def _fetch_consumer_tokens(self):
         """ Get consumer key and secret (not part of OAuth 1.0).
-        :return: <Response [200]> on success, None otherwise  
+        :return: <Response [200]> on success, None otherwise
         :rtype: requests.models.response """
 
         try:
@@ -51,7 +51,7 @@ class Discovergy:
 
     def _fetch_request_token(self):
         """ Get OAuth request token.
-        :return: token and token_secret on success, None otherwise 
+        :return: token and token_secret on success, None otherwise
         :rtype: dict """
 
         try:
@@ -74,7 +74,7 @@ class Discovergy:
         :param str password: the password of the client account
         :param resource_owner_key: the resource owner key obtained from calling
         _fetch_request_token()
-        :return: OAuth verifier on success, "" otherwise 
+        :return: OAuth verifier on success, "" otherwise
         :rtype:  str """
 
         try:
@@ -140,11 +140,11 @@ class Discovergy:
                                                    resource_owner_secret=resource_owner_secret)
 
         except requests.exceptions.HTTPError as e:
-            _LOGGER.error("HTTPError: %s" % s)
+            _LOGGER.error("HTTPError: %s" % e)
             return False
 
         except Exception as e:
-            _LOGGER.error("Exception: %s" % s)
+            _LOGGER.error("Exception: %s" % e)
             return False
 
         else:
@@ -200,8 +200,8 @@ class Discovergy:
             return None
 
     def get_disaggregation(self, meterId, start):
-        """ Return the disaggregation for the specified meter in the given
-        interval.
+        """ Return the disaggregation for the specified meter in the specified
+        time interval.
         :param str meterId: identifier of the meter to get readings for
         :param int start: start of interval as unix milliseconds timestamp
         :return: existing measurements for the specified meter in μWh per device
@@ -212,6 +212,34 @@ class Discovergy:
                                                   "/disaggregation?meterId=" +
                                                   meterId + "&from=" +
                                                   str(start))
+            measurement = json.loads(response.content.decode("utf-8"))
+            return measurement
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s" % e)
+            return None
+
+    def get_readings(self, meterId, start, resolution):
+        """ Return the measurements for the specified meter in the specified
+        time interval.
+        :param str meterId: identifier of the meter to get readings for
+        :param int start: start of interval as unix milliseconds timestamp
+        :param str resolution: time distance between returned
+        readings with possible values 'raw', 'three_minutes',
+        'fifteen_minutes', 'one_hour', 'one_day', 'one_week', 'one_month',
+        'one_year'
+        :return: each measurement as 'time' as unix milliseconds timestamp, 'power' in mW, 'power1' - 'powern'
+        for disaggregated energy consumers, 'energyOut', 'energy' in mWh
+        :rtype: list[dict] """
+
+        try:
+            print(resolution)
+            response = self._discovergy_oauth.get(self._base_url +
+                                                  "/readings?meterId=" +
+                                                  meterId + "&from=" +
+                                                  str(start) +
+                                                  "&resolution=" + resolution)
+            # print(response.content)
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
 
