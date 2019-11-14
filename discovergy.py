@@ -153,7 +153,7 @@ class Discovergy:
     def get_meters(self):
         """ Get all meters for client account.
         :return: meters
-        :rtype: list[dict]"""
+        :rtype: [dict]"""
 
         try:
             response = self._discovergy_oauth.get(self._base_url + "/meters")
@@ -186,7 +186,7 @@ class Discovergy:
         """ Return the last measurement for the specified meter.
         :param str meter_id: identifier of the meter to get readings for
         :return: 'time' as unix milliseconds timestamp, 'power' in mW, 'power1' - 'powern'
-        for disaggregated energy consumers, 'energyOut', 'energy' in mWh
+        for disaggregated energy consumers, 'energyOut' in mWh, 'energy' in mWh
         :rtype: dict """
 
         try:
@@ -228,10 +228,10 @@ class Discovergy:
         readings with possible values 'raw', 'three_minutes',
         'fifteen_minutes', 'one_hour', 'one_day', 'one_week', 'one_month',
         'one_year'
-        :return: each measurement as 'time' as unix milliseconds timestamp,
+        :return: each measurement with 'time' as unix milliseconds timestamp,
         'power' in mW, 'power1' - 'powern'
-        for disaggregated energy consumers, 'energyOut', 'energy' in mWh
-        :rtype: list[dict] """
+        for disaggregated energy consumers, 'energyOut' in mWh, 'energy' in mWh
+        :rtype: [dict] """
 
         try:
             response = self._discovergy_oauth.get(self._base_url +
@@ -241,6 +241,29 @@ class Discovergy:
                                                   "&resolution=" + resolution)
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
+
+        except Exception as e:
+            _LOGGER.error("Exception: %s", e)
+            return None
+
+    def get_activities(self, meter_id, start, end):
+        """ Returns the activities recognised for the given meter during the
+        given interval.
+        :param str meter_id: identifier of the meter to get readings for
+        :param int start: start of interval as unix milliseconds timestamp
+        :param int end: end of interval as unix milliseconds timestamp
+        :return: each activity with 'startTime' in unix milliseconds timestamp,
+        'endTime' as unix milliseconds timestamp, 'deviceName' as str, 'id' as str
+        :rtype: [dict] """
+
+        try:
+            response = self._discovergy_oauth.get(self._base_url +
+                                                  "/readings?meterId=" +
+                                                  meter_id + "&from=" +
+                                                  str(start) +
+                                                  "&to=" + str(end))
+            activities = json.loads(response.content.decode("utf-8"))
+            return activities
 
         except Exception as e:
             _LOGGER.error("Exception: %s", e)
