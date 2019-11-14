@@ -140,10 +140,12 @@ disable=print-statement,
         exception-escape,
         comprehension-escape,
 	too-many-instance-attributes,
-	missing-docstring,
-	invalid-name,
-	broad-except,
-      no-name-in-module
+        no-name-in-module, 
+        missing-docstring,
+        invalid-name,
+        broad-except,
+        import-error
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -507,7 +509,7 @@ valid-metaclass-classmethod-first-arg=cls
 max-args=5
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=15
 
 # Maximum number of boolean expressions in an if statement.
 max-bool-expr=5
@@ -519,7 +521,7 @@ max-branches=12
 max-locals=15
 
 # Maximum number of parents for a class (see R0901).
-max-parents=7
+max-parents=15
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=20
