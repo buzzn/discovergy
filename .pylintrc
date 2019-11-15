@@ -145,7 +145,8 @@ disable=print-statement,
         invalid-name,
         broad-except,
         import-error, 
-        protected-access
+        protected-access, 
+        attribute-defined-outside-init
 
 
 # Enable the message, report, category or checker with the given id(s). You can
