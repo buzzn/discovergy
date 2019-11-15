@@ -38,27 +38,39 @@ class DiscovergyTestCase(unittest.TestCase):
         of class Discovergy. """
 
         self.response = self.d._fetch_consumer_tokens()
+
+        # Check response types of _fetch_consumer_token()
         self.assertTrue(isinstance(self.response, requests.models.Response))
         self.assertTrue(isinstance(self.response.content, bytes))
+
+        # Check response values of _fetch_consumer_token()
         self.assertEqual(self.d._oauth_key, self.response.json()['key'])
         self.assertEqual(self.d._oauth_secret, self.response.json()['secret'])
+
+        # Open OAuth1Session for _fetch_request_token()
         request_token_oauth = OAuth1Session(self.d._oauth_key,
                                             client_secret=self.d._oauth_secret,
                                             callback_uri='oob')
         oauth_token_response = request_token_oauth.fetch_request_token(
             self.d._request_token_url)
+
+        # Check response values
         self.assertTrue('oauth_token' in oauth_token_response.keys())
         self.assertTrue('oauth_token_secret' in oauth_token_response.keys())
-        self.assertTrue(isinstance(
-            oauth_token_response.get('oauth_token'), str))
-        self.assertTrue(isinstance(oauth_token_response.get('oauth_token_secret'),
-                                   str))
         self.assertTrue(oauth_token_response.get('oauth_token').isalnum())
         self.assertTrue(oauth_token_response.get(
             'oauth_token_secret').isalnum())
         self.assertEqual(len(oauth_token_response.get('oauth_token')), 32)
         self.assertEqual(
             len(oauth_token_response.get('oauth_token_secret')), 32)
+
+        # Check response types
+        self.assertTrue(isinstance(
+            oauth_token_response.get('oauth_token'), str))
+        self.assertTrue(isinstance(oauth_token_response.get('oauth_token_secret'),
+                                   str))
+
+        # Close OAuth1Session, otherwise it will generate a warning
         request_token_oauth.close()
 
     def tearDown(self):
