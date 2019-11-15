@@ -35,6 +35,8 @@ class DiscovergyTestCase(unittest.TestCase):
     def test_fetch_consumer_tokens(self):
         """ Check function _fetch_consumer_token() of class Discovergy. """
 
+        print(self.discovergy._fetch_consumer_tokens())
+
     def tearDown(self):
         """ Tear down test suite. """
 
