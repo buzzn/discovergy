@@ -34,7 +34,7 @@ class Discovergy:
     def _fetch_consumer_tokens(self):
         """ Get consumer key and secret (not part of OAuth 1.0).
         :return: <Response [200]> on success, None otherwise
-        :rtype: requests.models.response """
+        :rtype: requests.models.Response """
 
         try:
             response = requests.post(url=self._consumer_token_url,

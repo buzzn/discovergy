@@ -12,11 +12,18 @@ pip install -r "requirements.txt"
 ## Built With
 * Python 3
 
-## Include Module
+## Use Module
+* Clone repository: `git clone git@github.com:buzzn/discovergy.git`
+* Import module: `from discovergy.discovergy import discovergy`
+
+## Run Tests
+* Setup virtual environment in root directory: 
 ```
-git clone git@github.com:buzzn/discovergy.git
-include discovergy
+virtualenv -p /path/to/python3/installation my_venv
+source my_venv/bin/activate 
 ```
+* Install module: `pip install .`
+* Run tests: `python -m unittest discover`
 
 ## Acknowledgements
 * [Discovergy API Documentation](https://api.discovergy.com/docs/)
