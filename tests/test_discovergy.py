@@ -13,10 +13,19 @@ class MockResponse:
         self.status_code = status_code
 
 
-def mocked_requests_get(*args, **kwargs):
-    """ Mock function requests.response() """
+def mock_requests_get(*args, **kwargs):
+    """ Mock function requests.response() for
+    Discovergy:_authorize_request_token(). """
 
     return MockResponse(b'oauth_verifier=3bfea9ada8c144afb81b5992b992303e', 202)
+
+
+def mock_oauth1session_fetch_access_token(*args, **kwargs):
+    """ Mock function OAuth1Session.fetch_access_token() for
+    Discovergy:_fetch_access_token(). """
+
+    return dict(oauth_token='2a28117b269e4f99893e9f758136becc',
+                oauth_token_secret='b75c7fc5142842afb3fd6686cacb675b')
 
 
 class DiscovergyTestCase(unittest.TestCase):
@@ -88,7 +97,7 @@ class DiscovergyTestCase(unittest.TestCase):
         # Close OAuth1Session, otherwise it will generate a warning
         request_token_oauth.close()
 
-    @mock.patch('requests.get', side_effect=mocked_requests_get)
+    @mock.patch('requests.get', side_effect=mock_requests_get)
     def test_authorize_request_token(self, mock_get):
         """ Test function _authorize_request_token(). """
 
@@ -100,6 +109,22 @@ class DiscovergyTestCase(unittest.TestCase):
 
         # Check verifier value
         self.assertEqual(verifier, '3bfea9ada8c144afb81b5992b992303e')
+
+    @mock.patch('requests.get', side_effect=mock_requests_get)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token', side_effect=mock_oauth1session_fetch_access_token)
+    def test_fetch_access_token(self, mock_get, mock_fetch_access_token):
+        """ Test function _fetch_access_token(). """
+
+        verifier = self.d._authorize_request_token('test@test.com', '123test',
+                                                   '719095064cbc476680700ec5bf274453')
+        # result = self.d._fetch_access_token()
+
+        # Check result type
+        # self.assertTrue(isinstance(result, {}))
+
+        # Check result value
+        # self.assertEqual(result, dict(oauth_token='2a28117b269e4f99893e9f758136becc',
+        # oauth_token_secret = 'b75c7fc5142842afb3fd6686cacb675b'))
 
     def tearDown(self):
         """ Tear down test suite. """
