@@ -1,7 +1,22 @@
 import unittest
+from unittest import mock
 import requests
 from requests_oauthlib import OAuth1Session
 from discovergy.discovergy import Discovergy
+
+
+class MockResponse:
+    """ Mock class requests.models.Response for unit testing"""
+
+    def __init__(self, content, status_code):
+        self.content = content
+        self.status_code = status_code
+
+
+def mocked_requests_get(*args, **kwargs):
+    """ Mock function requests.response() """
+
+    return MockResponse(b'oauth_verifier=3bfea9ada8c144afb81b5992b992303e', 202)
 
 
 class DiscovergyTestCase(unittest.TestCase):
@@ -12,7 +27,7 @@ class DiscovergyTestCase(unittest.TestCase):
         self.d = Discovergy("TestClient")
 
     def test_init(self):
-        """ Check function __init__() of class Discovergy. """
+        """ Test function __init__() of class Discovergy. """
 
         self.assertEqual(self.d._client_name, "TestClient")
         self.assertEqual(self.d._email, "")
@@ -34,7 +49,7 @@ class DiscovergyTestCase(unittest.TestCase):
         self.assertEqual(self.d._oauth_secret, None)
 
     def test_fetch_consumer_and_request_tokens(self):
-        """ Check functions _fetch_consumer_token() and _fetch_request_token()
+        """ Test functions _fetch_consumer_token() and _fetch_request_token()
         of class Discovergy. """
 
         self.response = self.d._fetch_consumer_tokens()
@@ -67,11 +82,24 @@ class DiscovergyTestCase(unittest.TestCase):
         # Check response types
         self.assertTrue(isinstance(
             oauth_token_response.get('oauth_token'), str))
-        self.assertTrue(isinstance(oauth_token_response.get('oauth_token_secret'),
-                                   str))
+        self.assertTrue(isinstance(
+            oauth_token_response.get('oauth_token_secret'), str))
 
         # Close OAuth1Session, otherwise it will generate a warning
         request_token_oauth.close()
+
+    @mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_authorize_request_token(self, mock_get):
+        """ Test function _authorize_request_token(). """
+
+        verifier = self.d._authorize_request_token('test@test.com', '123test',
+                                                   '719095064cbc476680700ec5bf274453')
+
+        # Check verifier type
+        self.assertTrue(isinstance(verifier, str))
+
+        # Check verifier value
+        self.assertEqual(verifier, '3bfea9ada8c144afb81b5992b992303e')
 
     def tearDown(self):
         """ Tear down test suite. """
