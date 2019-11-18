@@ -146,7 +146,9 @@ disable=print-statement,
         broad-except,
         import-error, 
         protected-access, 
-        attribute-defined-outside-init
+        attribute-defined-outside-init,
+        unused-argument, 
+        too-few-public-methods
 
 
 # Enable the message, report, category or checker with the given id(s). You can
