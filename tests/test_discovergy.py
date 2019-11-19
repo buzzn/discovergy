@@ -111,20 +111,22 @@ class DiscovergyTestCase(unittest.TestCase):
         self.assertEqual(verifier, '3bfea9ada8c144afb81b5992b992303e')
 
     @mock.patch('requests.get', side_effect=mock_requests_get)
-    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token', side_effect=mock_oauth1session_fetch_access_token)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
+                side_effect=mock_oauth1session_fetch_access_token)
     def test_fetch_access_token(self, mock_get, mock_fetch_access_token):
         """ Test function _fetch_access_token(). """
 
         verifier = self.d._authorize_request_token('test@test.com', '123test',
                                                    '719095064cbc476680700ec5bf274453')
-        # result = self.d._fetch_access_token()
+        access_token = self.d._fetch_access_token(
+            '719095064cbc476680700ec5bf274453', '1f51232ace6a403a9bd2cdfff8d63a28', verifier)
 
         # Check result type
-        # self.assertTrue(isinstance(result, {}))
+        self.assertTrue(isinstance(access_token, dict))
 
         # Check result value
-        # self.assertEqual(result, dict(oauth_token='2a28117b269e4f99893e9f758136becc',
-        # oauth_token_secret = 'b75c7fc5142842afb3fd6686cacb675b'))
+        self.assertEqual(access_token, dict(token='2a28117b269e4f99893e9f758136becc',
+                                            token_secret='b75c7fc5142842afb3fd6686cacb675b'))
 
     def tearDown(self):
         """ Tear down test suite. """
