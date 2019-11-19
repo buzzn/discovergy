@@ -183,9 +183,6 @@ class DiscovergyTestCase(unittest.TestCase):
         # Check result value
         self.assertEqual(login, True)
 
-    def tearDown(self):
-        """ Tear down test suite. """
-
 
 if __name__ == "__main__":
     unittest.main()
