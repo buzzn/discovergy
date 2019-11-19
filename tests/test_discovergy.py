@@ -1,7 +1,6 @@
 import unittest
 from unittest import mock
-import requests
-from requests_oauthlib import OAuth1Session
+import json
 from discovergy.discovergy import Discovergy
 
 
@@ -11,6 +10,17 @@ class MockResponse:
     def __init__(self, content, status_code):
         self.content = content
         self.status_code = status_code
+
+    def json(self):
+        return json.loads(self.content)
+
+
+def mock_requests_post(*args, **kwargs):
+    """ Mock function requests.post() for
+    Discovergy:_fetch_consumer_tokens(). """
+
+    return MockResponse(
+        b'{"key":"9srhl1op4jemrcpafqpr2hhcq9","secret":"i5nu32jmjsjunttq0lpi4r2qo0","owner":"TestClient","attributes":{},"principal":null}', 200)
 
 
 def mock_requests_get(*args, **kwargs):
@@ -57,49 +67,56 @@ class DiscovergyTestCase(unittest.TestCase):
         self.assertEqual(self.d._oauth_key, None)
         self.assertEqual(self.d._oauth_secret, None)
 
-    def test_fetch_consumer_and_request_tokens(self):
-        """ Test functions _fetch_consumer_token() and _fetch_request_token()
-        of class Discovergy. """
+    @mock.patch('requests.post', side_effect=mock_requests_post)
+    def test_fetch_consumer_tokens(self, mock_post):
+        """ Test function _fetch_consumer_token() of class Discovergy. """
 
-        self.response = self.d._fetch_consumer_tokens()
-
-        # Check response types of _fetch_consumer_token()
-        self.assertTrue(isinstance(self.response, requests.models.Response))
-        self.assertTrue(isinstance(self.response.content, bytes))
-
-        # Check response values of _fetch_consumer_token()
-        self.assertEqual(self.d._oauth_key, self.response.json()['key'])
-        self.assertEqual(self.d._oauth_secret, self.response.json()['secret'])
-
-        # Open OAuth1Session for _fetch_request_token()
-        request_token_oauth = OAuth1Session(self.d._oauth_key,
-                                            client_secret=self.d._oauth_secret,
-                                            callback_uri='oob')
-        oauth_token_response = request_token_oauth.fetch_request_token(
-            self.d._request_token_url)
-
-        # Check response values
-        self.assertTrue('oauth_token' in oauth_token_response.keys())
-        self.assertTrue('oauth_token_secret' in oauth_token_response.keys())
-        self.assertTrue(oauth_token_response.get('oauth_token').isalnum())
-        self.assertTrue(oauth_token_response.get(
-            'oauth_token_secret').isalnum())
-        self.assertEqual(len(oauth_token_response.get('oauth_token')), 32)
-        self.assertEqual(
-            len(oauth_token_response.get('oauth_token_secret')), 32)
+        response = self.d._fetch_consumer_tokens()
 
         # Check response types
         self.assertTrue(isinstance(
-            oauth_token_response.get('oauth_token'), str))
-        self.assertTrue(isinstance(
-            oauth_token_response.get('oauth_token_secret'), str))
+            response, MockResponse))
+        self.assertTrue(isinstance(response.content, bytes))
 
-        # Close OAuth1Session, otherwise it will generate a warning
-        request_token_oauth.close()
+        # Check response values
+        self.assertEqual(self.d._oauth_key, response.json()['key'])
+        self.assertEqual(self.d._oauth_secret, response.json()['secret'])
+
+    # def test_fetch_consumer_and_request_tokens(self):
+    #     """ Test functions _fetch_consumer_token() and _fetch_request_token()
+    #     of class Discovergy. """
+
+    #     self.response = self.d._fetch_consumer_tokens()
+
+    #     # Open OAuth1Session for _fetch_request_token()
+    #     request_token_oauth = OAuth1Session(self.d._oauth_key,
+    #                                         client_secret=self.d._oauth_secret,
+    #                                         callback_uri='oob')
+    #     oauth_token_response = request_token_oauth.fetch_request_token(
+    #         self.d._request_token_url)
+
+    #     # Check response values
+    #     self.assertTrue('oauth_token' in oauth_token_response.keys())
+    #     self.assertTrue('oauth_token_secret' in oauth_token_response.keys())
+    #     self.assertTrue(oauth_token_response.get('oauth_token').isalnum())
+    #     self.assertTrue(oauth_token_response.get(
+    #         'oauth_token_secret').isalnum())
+    #     self.assertEqual(len(oauth_token_response.get('oauth_token')), 32)
+    #     self.assertEqual(
+    #         len(oauth_token_response.get('oauth_token_secret')), 32)
+
+    #     # Check response types
+    #     self.assertTrue(isinstance(
+    #         oauth_token_response.get('oauth_token'), str))
+    #     self.assertTrue(isinstance(
+    #         oauth_token_response.get('oauth_token_secret'), str))
+
+    #     # Close OAuth1Session, otherwise it will generate a warning
+    #     request_token_oauth.close()
 
     @mock.patch('requests.get', side_effect=mock_requests_get)
     def test_authorize_request_token(self, mock_get):
-        """ Test function _authorize_request_token(). """
+        """ Test function _authorize_request_token() of class Discovergy. """
 
         verifier = self.d._authorize_request_token('test@test.com', '123test',
                                                    '719095064cbc476680700ec5bf274453')
@@ -114,7 +131,7 @@ class DiscovergyTestCase(unittest.TestCase):
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
                 side_effect=mock_oauth1session_fetch_access_token)
     def test_fetch_access_token(self, mock_get, mock_fetch_access_token):
-        """ Test function _fetch_access_token(). """
+        """ Test function _fetch_access_token() of class Discovergy. """
 
         verifier = self.d._authorize_request_token('test@test.com', '123test',
                                                    '719095064cbc476680700ec5bf274453')
@@ -127,6 +144,14 @@ class DiscovergyTestCase(unittest.TestCase):
         # Check result value
         self.assertEqual(access_token, dict(token='2a28117b269e4f99893e9f758136becc',
                                             token_secret='b75c7fc5142842afb3fd6686cacb675b'))
+
+    @mock.patch('requests.get', side_effect=mock_requests_get)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
+                side_effect=mock_oauth1session_fetch_access_token)
+    def test_login(self, mock_get, mock_fetch_access_token):
+        """ Test function login() of class Discovergy. """
+
+        login = self.d.login('test@test.com', '123test')
 
     def tearDown(self):
         """ Tear down test suite. """
