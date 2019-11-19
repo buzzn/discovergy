@@ -158,13 +158,24 @@ class DiscovergyTestCase(unittest.TestCase):
         self.assertEqual(access_token, dict(token='2a28117b269e4f99893e9f758136becc',
                                             token_secret='b75c7fc5142842afb3fd6686cacb675b'))
 
+    @mock.patch('requests.post', side_effect=mock_requests_post)
     @mock.patch('requests.get', side_effect=mock_requests_get)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
                 side_effect=mock_oauth1session_fetch_access_token)
-    def test_login(self, mock_get, mock_fetch_access_token):
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
+                side_effect=mock_oauth1session_fetch_request_token)
+    def test_login(self, mock_post, mock_get, mock_fetch_access_token,
+                   mock_fetch_request_token):
         """ Test function login() of class Discovergy. """
 
-        # login = self.d.login('test@test.com', '123test')
+        d = Discovergy('TestClient')
+        login = d.login('test@test.com', '123test')
+
+        # Check result type
+        self.assertTrue(isinstance(login, bool))
+
+        # Check result value
+        self.assertEqual(login, True)
 
     def tearDown(self):
         """ Tear down test suite. """
