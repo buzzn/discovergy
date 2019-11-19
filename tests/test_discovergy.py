@@ -13,6 +13,19 @@ MOCK_REQUEST_TOKEN = dict(oauth_token='a866629d5ae1492d87775d6ce41b30cc',
                           oauth_token_secret='13fb12af6acb49c3afda5406bcf44ba5', oauth_callback_confirmed='true')
 MOCK_ACCESS_TOKEN = dict(oauth_token='2a28117b269e4f99893e9f758136becc',
                          oauth_token_secret='b75c7fc5142842afb3fd6686cacb675b')
+MOCK_RESPONSE_METERS = '[{"meterId": "a31f06058fc71fd0fd8d5330e8abfd80",\
+        "manufacturerId": "ESY", "serialNumber": "45676042",\
+        "fullSerialNumber": "", "location": {"street": "BUZZN people power",\
+        "streetNumber": "", "zip": "", "city": "", "country": "DE"},\
+        "administrationNumber": "", "type": "EASYMETER",\
+        "measurementType": "ELECTRICITY",\
+        "loadProfileType": "SLP", "scalingFactor": 1,\
+        "currentScalingFactor": 1, "voltageScalingFactor": 1,\
+        "internalMeters": 1, "firstMeasurementTime": -1,\
+        "lastMeasurementTime": -1}]'
+METER_KEYS = ['meterId', 'manufacturerId', 'serialNumber', 'fullSerialNumber', 'location', 'administrationNumber', 'type', 'measurementType',
+              'loadProfileType', 'scalingFactor', 'currentScalingFactor', 'voltageScalingFactor', 'internalMeters', 'firstMeasurementTime', 'lastMeasurementTime']
+LOCATION_KEYS = ['street', 'streetNumber', 'zip', 'city', 'country']
 
 
 class MockResponse:
@@ -52,6 +65,13 @@ def mock_oauth1session_fetch_access_token(*args, **kwargs):
     Discovergy:_fetch_access_token(). """
 
     return MOCK_ACCESS_TOKEN
+
+
+def mock_oauth1session_get_meters(*args, **kwargs):
+    """ Mock function OAuth1Session.get() for
+    Discovergy:get_meters(). """
+
+    return MockResponse(MOCK_RESPONSE_METERS.encode(), 200)
 
 
 class DiscovergyTestCase(unittest.TestCase):
@@ -182,6 +202,30 @@ class DiscovergyTestCase(unittest.TestCase):
 
         # Check result value
         self.assertEqual(login, True)
+
+    @mock.patch('requests_oauthlib.OAuth1Session.get',
+                side_effect=mock_oauth1session_get_meters)
+    @mock.patch('requests.post', side_effect=mock_requests_post)
+    @mock.patch('requests.get', side_effect=mock_requests_get)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
+                side_effect=mock_oauth1session_fetch_access_token)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
+                side_effect=mock_oauth1session_fetch_request_token)
+    def test_get_meters(self, mock_get_meters, mock_post, mock_get,
+                        mock_fetch_access_token, mock_fetch_request_token):
+        """ Test function get_meters() of class Discovergy. """
+
+        d = Discovergy('TestClient')
+        login = d.login('test@test.com', '123test')
+        meters = d.get_meters()
+
+        # Check return types
+        self.assertTrue(isinstance(meters, list))
+        self.assertTrue(isinstance(meters[0], dict))
+
+        # Check return values
+        self.assertEqual(list(meters[0].keys()), METER_KEYS)
+        self.assertEqual(list(meters[0].get('location').keys()), LOCATION_KEYS)
 
 
 if __name__ == "__main__":
