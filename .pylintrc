@@ -148,7 +148,9 @@ disable=print-statement,
         protected-access, 
         attribute-defined-outside-init,
         unused-argument, 
-        too-few-public-methods
+        too-few-public-methods, 
+        line-too-long, 
+        unused-variable
 
 
 # Enable the message, report, category or checker with the given id(s). You can
