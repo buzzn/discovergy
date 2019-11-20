@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 import json
+from datetime import datetime, timedelta
 from requests_oauthlib import OAuth1Session
 from discovergy.discovergy import Discovergy
 
@@ -41,6 +42,13 @@ MEASUREMENT = dict(time=1574243404449, values=dict(power=5861890,
                                                    power1=2018130,
                                                    energy=413189496760000,
                                                    power2=1935600))
+MOCK_RESPONSE_DISAGGREGATION = '{"1574101800000":{"Waschmaschine-1":0,"Spülmaschine-1":0,"Durchlauferhitzer-2":0,"Durchlauferhitzer-3":0,"Grundlast-1":2500000,"Durchlauferhitzer-1":0}}'
+DISAGGREGATION = {'1574101800000': {'Waschmaschine-1': 0,
+                                    'Spülmaschine-1': 0,
+                                    'Durchlauferhitzer-2': 0,
+                                    'Durchlauferhitzer-3': 0,
+                                    'Grundlast-1': 2500000,
+                                    'Durchlauferhitzer-1': 0}}
 
 
 class MockResponse:
@@ -97,6 +105,12 @@ def mock_oauth1session_get_last_reading(*args, **kwargs):
     """ Mock function OAuth1Session.get() for Discovergy:get_last_reading(). """
 
     return MockResponse(MOCK_RESPONSE_LAST_READING.encode(), 200)
+
+
+def mock_oauth1session_get_disaggregation(*args, **kwargs):
+    """ Mock function OAuth1Session.get() for Discovergy:get_disaggregation(). """
+
+    return MockResponse(MOCK_RESPONSE_DISAGGREGATION.encode(), 200)
 
 
 class DiscovergyTestCase(unittest.TestCase):
@@ -295,6 +309,31 @@ class DiscovergyTestCase(unittest.TestCase):
 
         # Check result values
         self.assertEqual(measurement, MEASUREMENT)
+
+    @mock.patch('requests_oauthlib.OAuth1Session.get',
+                side_effect=mock_oauth1session_get_disaggregation)
+    @mock.patch('requests.post', side_effect=mock_requests_post)
+    @mock.patch('requests.get', side_effect=mock_requests_get)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
+                side_effect=mock_oauth1session_fetch_access_token)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
+                side_effect=mock_oauth1session_fetch_request_token)
+    def test_get_disaggregation(self, mock_get_disaggregation, mock_post, mock_get,
+                                mock_fetch_access_token, mock_fetch_request_token):
+        """ Test function get_last_reading() of class Discovergy. """
+
+        d = Discovergy('TestClient')
+        login = d.login('test@test.com', '123test')
+        end = datetime.now()
+        start = end - timedelta(hours=11)
+        start = round(start.timestamp() * 1e3)
+        measurement = d.get_disaggregation(METER_ID, start)
+
+        # Check result type
+        self.assertTrue(isinstance(measurement, dict))
+
+        # Check result values
+        self.assertEqual(measurement, DISAGGREGATION)
 
 
 if __name__ == "__main__":
