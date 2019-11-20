@@ -33,6 +33,14 @@ LOCATION_KEYS = ['street', 'streetNumber', 'zip', 'city', 'country']
 METER_ID = '8fa37290c019170f35ae3e4d88abf2b8'
 MOCK_RESPONSE_FIELDNAMES_FOR_METER = '["energy","power","power1","power2","power3","energyOut"]'
 FIELDNAMES = ['energy', 'power', 'power1', 'power2', 'power3', 'energyOut']
+MOCK_RESPONSE_LAST_READING = '{"time":1574243404449,"values":{"power":5861890,\
+        "power3":1908160,"energyOut":0,"power1":2018130,"energy":413189496760000,\
+        "power2":1935600}}'
+MEASUREMENT = dict(time=1574243404449, values=dict(power=5861890,
+                                                   power3=1908160, energyOut=0,
+                                                   power1=2018130,
+                                                   energy=413189496760000,
+                                                   power2=1935600))
 
 
 class MockResponse:
@@ -80,9 +88,15 @@ def mock_oauth1session_get_meters(*args, **kwargs):
 
 
 def mock_oauth1session_get_fieldnames_for_meter(*args, **kwargs):
-    """ Mock function OAuth1Session.get() for Discovergy:get_meters()"""
+    """ Mock function OAuth1Session.get() for Discovergy:get_meters(). """
 
     return MockResponse(MOCK_RESPONSE_FIELDNAMES_FOR_METER.encode(), 200)
+
+
+def mock_oauth1session_get_last_reading(*args, **kwargs):
+    """ Mock function OAuth1Session.get() for Discovergy:get_last_reading(). """
+
+    return MockResponse(MOCK_RESPONSE_LAST_READING.encode(), 200)
 
 
 class DiscovergyTestCase(unittest.TestCase):
@@ -246,7 +260,7 @@ class DiscovergyTestCase(unittest.TestCase):
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_fieldnames_for_meter(self, mock_get_meters, mock_post, mock_get,
+    def test_get_fieldnames_for_meter(self, mock_get_fieldnames, mock_post, mock_get,
                                       mock_fetch_access_token, mock_fetch_request_token):
         """ Test function get_fieldnames_for_meter() of class Discovergy. """
 
@@ -259,6 +273,28 @@ class DiscovergyTestCase(unittest.TestCase):
 
         # Check result values
         self.assertEqual(fieldnames, FIELDNAMES)
+
+    @mock.patch('requests_oauthlib.OAuth1Session.get',
+                side_effect=mock_oauth1session_get_last_reading)
+    @mock.patch('requests.post', side_effect=mock_requests_post)
+    @mock.patch('requests.get', side_effect=mock_requests_get)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
+                side_effect=mock_oauth1session_fetch_access_token)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
+                side_effect=mock_oauth1session_fetch_request_token)
+    def test_get_last_reading(self, mock_get_last_reading, mock_post, mock_get,
+                              mock_fetch_access_token, mock_fetch_request_token):
+        """ Test function get_last_reading() of class Discovergy. """
+
+        d = Discovergy('TestClient')
+        login = d.login('test@test.com', '123test')
+        measurement = d.get_last_reading(METER_ID)
+
+        # Check result type
+        self.assertTrue(isinstance(measurement, dict))
+
+        # Check result values
+        self.assertEqual(measurement, MEASUREMENT)
 
 
 if __name__ == "__main__":
