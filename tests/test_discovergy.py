@@ -10,7 +10,8 @@ MOCK_RESPONSE_POST = '{"key":"9srhl1op4jemrcpafqpr2hhcq9",\
         "attributes":{},"principal":null}'
 MOCK_RESPONSE_GET = 'oauth_verifier=3bfea9ada8c144afb81b5992b992303e'
 MOCK_REQUEST_TOKEN = dict(oauth_token='a866629d5ae1492d87775d6ce41b30cc',
-                          oauth_token_secret='13fb12af6acb49c3afda5406bcf44ba5', oauth_callback_confirmed='true')
+                          oauth_token_secret='13fb12af6acb49c3afda5406bcf44ba5',
+                          oauth_callback_confirmed='true')
 MOCK_ACCESS_TOKEN = dict(oauth_token='2a28117b269e4f99893e9f758136becc',
                          oauth_token_secret='b75c7fc5142842afb3fd6686cacb675b')
 MOCK_RESPONSE_METERS = '[{"meterId": "a31f06058fc71fd0fd8d5330e8abfd80",\
@@ -23,8 +24,11 @@ MOCK_RESPONSE_METERS = '[{"meterId": "a31f06058fc71fd0fd8d5330e8abfd80",\
         "currentScalingFactor": 1, "voltageScalingFactor": 1,\
         "internalMeters": 1, "firstMeasurementTime": -1,\
         "lastMeasurementTime": -1}]'
-METER_KEYS = ['meterId', 'manufacturerId', 'serialNumber', 'fullSerialNumber', 'location', 'administrationNumber', 'type', 'measurementType',
-              'loadProfileType', 'scalingFactor', 'currentScalingFactor', 'voltageScalingFactor', 'internalMeters', 'firstMeasurementTime', 'lastMeasurementTime']
+METER_KEYS = ['meterId', 'manufacturerId', 'serialNumber', 'fullSerialNumber',
+              'location', 'administrationNumber', 'type', 'measurementType',
+              'loadProfileType', 'scalingFactor', 'currentScalingFactor',
+              'voltageScalingFactor', 'internalMeters', 'firstMeasurementTime',
+              'lastMeasurementTime']
 LOCATION_KEYS = ['street', 'streetNumber', 'zip', 'city', 'country']
 
 
