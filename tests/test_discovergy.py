@@ -42,13 +42,28 @@ MEASUREMENT = dict(time=1574243404449, values=dict(power=5861890,
                                                    power1=2018130,
                                                    energy=413189496760000,
                                                    power2=1935600))
-MOCK_RESPONSE_DISAGGREGATION = '{"1574101800000":{"Waschmaschine-1":0,"Spülmaschine-1":0,"Durchlauferhitzer-2":0,"Durchlauferhitzer-3":0,"Grundlast-1":2500000,"Durchlauferhitzer-1":0}}'
+MOCK_RESPONSE_DISAGGREGATION = '{"1574101800000":{"Waschmaschine-1":0,\
+        "Spülmaschine-1":0,"Durchlauferhitzer-2":0,"Durchlauferhitzer-3":0,\
+        "Grundlast-1":2500000,"Durchlauferhitzer-1":0}}'
 DISAGGREGATION = {'1574101800000': {'Waschmaschine-1': 0,
                                     'Spülmaschine-1': 0,
                                     'Durchlauferhitzer-2': 0,
                                     'Durchlauferhitzer-3': 0,
                                     'Grundlast-1': 2500000,
                                     'Durchlauferhitzer-1': 0}}
+MOCK_RESPONSE_READINGS = '[{"time":1574244000000,"values":{"power":0,\
+        "power3":-27279,"energyOut":0,"power1":0,"energy":2180256872214000,\
+        "power2":-2437}},{"time":1574247600000,"values":{"power":0,\
+        "power3":-25192,"energyOut":0,"power1":0,"energy":2180256872214000,\
+        "power2":-2443}}]'
+READINGS = [{'time': 1574244000000, 'values': {'power': 0, 'power3': -27279,
+                                               'energyOut': 0, 'power1': 0,
+                                               'energy': 2180256872214000,
+                                               'power2': -2437}},
+            {'time': 1574247600000, 'values': {'power': 0, 'power3': -25192,
+                                               'energyOut': 0, 'power1': 0,
+                                               'energy': 2180256872214000,
+                                               'power2': -2443}}]
 
 
 class MockResponse:
@@ -111,6 +126,12 @@ def mock_oauth1session_get_disaggregation(*args, **kwargs):
     """ Mock function OAuth1Session.get() for Discovergy:get_disaggregation(). """
 
     return MockResponse(MOCK_RESPONSE_DISAGGREGATION.encode(), 200)
+
+
+def mock_oauth1session_get_readings(*args, **kwargs):
+    """ Mock function OAuth1Session.get() for Discovergy:get_readings(). """
+
+    return MockResponse(MOCK_RESPONSE_READINGS.encode(), 200)
 
 
 class DiscovergyTestCase(unittest.TestCase):
@@ -334,6 +355,31 @@ class DiscovergyTestCase(unittest.TestCase):
 
         # Check result values
         self.assertEqual(measurement, DISAGGREGATION)
+
+    @mock.patch('requests_oauthlib.OAuth1Session.get',
+                side_effect=mock_oauth1session_get_readings)
+    @mock.patch('requests.post', side_effect=mock_requests_post)
+    @mock.patch('requests.get', side_effect=mock_requests_get)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
+                side_effect=mock_oauth1session_fetch_access_token)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
+                side_effect=mock_oauth1session_fetch_request_token)
+    def test_get_readings(self, mock_get_readings, mock_post, mock_get,
+                          mock_fetch_access_token, mock_fetch_request_token):
+        """ Test function get_readings() of class Discovergy. """
+
+        d = Discovergy('TestClient')
+        login = d.login('test@test.com', '123test')
+        end = datetime.now()
+        start = end - timedelta(hours=2)
+        start = round(start.timestamp() * 1e3)
+        measurement = d.get_readings(METER_ID, start, 'one_hour')
+
+        # Check response type
+        self.assertTrue(isinstance(measurement, list))
+
+        # Check response values
+        self.assertEqual(measurement, READINGS)
 
 
 if __name__ == "__main__":
