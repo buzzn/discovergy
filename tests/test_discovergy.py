@@ -293,7 +293,8 @@ class DiscovergyTestCase(unittest.TestCase):
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_fieldnames_for_meter(self, get_fieldnames, post, get, fetch_access_token, fetch_request_token):
+    def test_get_fieldnames_for_meter(self, get_fieldnames, post, get,
+                                      fetch_access_token, fetch_request_token):
         """ Test function get_fieldnames_for_meter() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -314,7 +315,8 @@ class DiscovergyTestCase(unittest.TestCase):
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_last_reading(self, get_reading, post, get, fetch_access_token, fetch_request_token):
+    def test_get_last_reading(self, get_reading, post, get, fetch_access_token,
+                              fetch_request_token):
         """ Test function get_last_reading() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -335,7 +337,8 @@ class DiscovergyTestCase(unittest.TestCase):
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_disaggregation(self, get_disaggregation, post, get, fetch_access_token, fetch_request_token):
+    def test_get_disaggregation(self, get_disaggregation, post, get,
+                                fetch_access_token, fetch_request_token):
         """ Test function get_last_reading() of class Discovergy. """
 
         d = Discovergy('TestClient')
