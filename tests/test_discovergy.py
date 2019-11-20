@@ -32,16 +32,16 @@ METER_KEYS = ['meterId', 'manufacturerId', 'serialNumber', 'fullSerialNumber',
               'lastMeasurementTime']
 LOCATION_KEYS = ['street', 'streetNumber', 'zip', 'city', 'country']
 METER_ID = '8fa37290c019170f35ae3e4d88abf2b8'
-MOCK_RESPONSE_FIELDNAMES_FOR_METER = '["energy","power","power1","power2","power3","energyOut"]'
+MOCK_RESPONSE_FIELDNAMES = '["energy","power","power1","power2","power3","energyOut"]'
 FIELDNAMES = ['energy', 'power', 'power1', 'power2', 'power3', 'energyOut']
-MOCK_RESPONSE_LAST_READING = '{"time":1574243404449,"values":{"power":5861890,\
+MOCK_RESPONSE_READING = '{"time":1574243404449,"values":{"power":5861890,\
         "power3":1908160,"energyOut":0,"power1":2018130,"energy":413189496760000,\
         "power2":1935600}}'
-MEASUREMENT = dict(time=1574243404449, values=dict(power=5861890,
-                                                   power3=1908160, energyOut=0,
-                                                   power1=2018130,
-                                                   energy=413189496760000,
-                                                   power2=1935600))
+READING = dict(time=1574243404449, values=dict(power=5861890,
+                                               power3=1908160, energyOut=0,
+                                               power1=2018130,
+                                               energy=413189496760000,
+                                               power2=1935600))
 MOCK_RESPONSE_DISAGGREGATION = '{"1574101800000":{"Waschmaschine-1":0,\
         "Spülmaschine-1":0,"Durchlauferhitzer-2":0,"Durchlauferhitzer-3":0,\
         "Grundlast-1":2500000,"Durchlauferhitzer-1":0}}'
@@ -84,10 +84,10 @@ def mock_requests_post(*args, **kwargs):
 
 
 def mock_requests_get(*args, **kwargs):
-    """ Mock function requests.response() for
+    """ Mock function requests.get() for
     Discovergy:_authorize_request_token(). """
 
-    return MockResponse(MOCK_RESPONSE_GET.encode(), 202)
+    return MockResponse(MOCK_RESPONSE_GET.encode(), 200)
 
 
 def mock_oauth1session_fetch_request_token(*args, **kwargs):
@@ -110,16 +110,16 @@ def mock_oauth1session_get_meters(*args, **kwargs):
     return MockResponse(MOCK_RESPONSE_METERS.encode(), 200)
 
 
-def mock_oauth1session_get_fieldnames_for_meter(*args, **kwargs):
+def mock_oauth1session_get_fieldnames(*args, **kwargs):
     """ Mock function OAuth1Session.get() for Discovergy:get_meters(). """
 
-    return MockResponse(MOCK_RESPONSE_FIELDNAMES_FOR_METER.encode(), 200)
+    return MockResponse(MOCK_RESPONSE_FIELDNAMES.encode(), 200)
 
 
-def mock_oauth1session_get_last_reading(*args, **kwargs):
+def mock_oauth1session_get_reading(*args, **kwargs):
     """ Mock function OAuth1Session.get() for Discovergy:get_last_reading(). """
 
-    return MockResponse(MOCK_RESPONSE_LAST_READING.encode(), 200)
+    return MockResponse(MOCK_RESPONSE_READING.encode(), 200)
 
 
 def mock_oauth1session_get_disaggregation(*args, **kwargs):
@@ -161,7 +161,7 @@ class DiscovergyTestCase(unittest.TestCase):
         self.assertEqual(d._oauth_secret, None)
 
     @mock.patch('requests.post', side_effect=mock_requests_post)
-    def test_fetch_consumer_tokens(self, mock_post):
+    def test_fetch_consumer_tokens(self, post):
         """ Test function _fetch_consumer_token() of class Discovergy. """
 
         d = Discovergy("TestClient")
@@ -179,7 +179,7 @@ class DiscovergyTestCase(unittest.TestCase):
     @mock.patch('requests.post', side_effect=mock_requests_post)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_fetch_request_token(self, mock_post, mock_fetch_request_token):
+    def test_fetch_request_token(self, post, fetch_request_token):
         """ Test function _fetch_request_token() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -212,7 +212,7 @@ class DiscovergyTestCase(unittest.TestCase):
             oauth_token_response.get('oauth_token_secret'), str))
 
     @mock.patch('requests.get', side_effect=mock_requests_get)
-    def test_authorize_request_token(self, mock_get):
+    def test_authorize_request_token(self, get):
         """ Test function _authorize_request_token() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -228,7 +228,7 @@ class DiscovergyTestCase(unittest.TestCase):
     @mock.patch('requests.get', side_effect=mock_requests_get)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
                 side_effect=mock_oauth1session_fetch_access_token)
-    def test_fetch_access_token(self, mock_get, mock_fetch_access_token):
+    def test_fetch_access_token(self, get, fetch_access_token):
         """ Test function _fetch_access_token() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -250,8 +250,7 @@ class DiscovergyTestCase(unittest.TestCase):
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_login(self, mock_post, mock_get, mock_fetch_access_token,
-                   mock_fetch_request_token):
+    def test_login(self, post, get, fetch_access_token, fetch_request_token):
         """ Test function login() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -271,8 +270,7 @@ class DiscovergyTestCase(unittest.TestCase):
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_meters(self, mock_get_meters, mock_post, mock_get,
-                        mock_fetch_access_token, mock_fetch_request_token):
+    def test_get_meters(self, get_meters, post, get, fetch_access_token, fetch_request_token):
         """ Test function get_meters() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -288,15 +286,14 @@ class DiscovergyTestCase(unittest.TestCase):
         self.assertEqual(list(meters[0].get('location').keys()), LOCATION_KEYS)
 
     @mock.patch('requests_oauthlib.OAuth1Session.get',
-                side_effect=mock_oauth1session_get_fieldnames_for_meter)
+                side_effect=mock_oauth1session_get_fieldnames)
     @mock.patch('requests.post', side_effect=mock_requests_post)
     @mock.patch('requests.get', side_effect=mock_requests_get)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_fieldnames_for_meter(self, mock_get_fieldnames, mock_post, mock_get,
-                                      mock_fetch_access_token, mock_fetch_request_token):
+    def test_get_fieldnames_for_meter(self, get_fieldnames, post, get, fetch_access_token, fetch_request_token):
         """ Test function get_fieldnames_for_meter() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -310,15 +307,14 @@ class DiscovergyTestCase(unittest.TestCase):
         self.assertEqual(fieldnames, FIELDNAMES)
 
     @mock.patch('requests_oauthlib.OAuth1Session.get',
-                side_effect=mock_oauth1session_get_last_reading)
+                side_effect=mock_oauth1session_get_reading)
     @mock.patch('requests.post', side_effect=mock_requests_post)
     @mock.patch('requests.get', side_effect=mock_requests_get)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_last_reading(self, mock_get_last_reading, mock_post, mock_get,
-                              mock_fetch_access_token, mock_fetch_request_token):
+    def test_get_last_reading(self, get_reading, post, get, fetch_access_token, fetch_request_token):
         """ Test function get_last_reading() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -329,7 +325,7 @@ class DiscovergyTestCase(unittest.TestCase):
         self.assertTrue(isinstance(measurement, dict))
 
         # Check result values
-        self.assertEqual(measurement, MEASUREMENT)
+        self.assertEqual(measurement, READING)
 
     @mock.patch('requests_oauthlib.OAuth1Session.get',
                 side_effect=mock_oauth1session_get_disaggregation)
@@ -339,8 +335,7 @@ class DiscovergyTestCase(unittest.TestCase):
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_disaggregation(self, mock_get_disaggregation, mock_post, mock_get,
-                                mock_fetch_access_token, mock_fetch_request_token):
+    def test_get_disaggregation(self, get_disaggregation, post, get, fetch_access_token, fetch_request_token):
         """ Test function get_last_reading() of class Discovergy. """
 
         d = Discovergy('TestClient')
@@ -364,8 +359,7 @@ class DiscovergyTestCase(unittest.TestCase):
                 side_effect=mock_oauth1session_fetch_access_token)
     @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
                 side_effect=mock_oauth1session_fetch_request_token)
-    def test_get_readings(self, mock_get_readings, mock_post, mock_get,
-                          mock_fetch_access_token, mock_fetch_request_token):
+    def test_get_readings(self, get_readings, post, get, fetch_access_token, fetch_request_token):
         """ Test function get_readings() of class Discovergy. """
 
         d = Discovergy('TestClient')
