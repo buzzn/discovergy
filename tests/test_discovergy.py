@@ -30,6 +30,9 @@ METER_KEYS = ['meterId', 'manufacturerId', 'serialNumber', 'fullSerialNumber',
               'voltageScalingFactor', 'internalMeters', 'firstMeasurementTime',
               'lastMeasurementTime']
 LOCATION_KEYS = ['street', 'streetNumber', 'zip', 'city', 'country']
+METER_ID = '8fa37290c019170f35ae3e4d88abf2b8'
+MOCK_RESPONSE_FIELDNAMES_FOR_METER = '["energy","power","power1","power2","power3","energyOut"]'
+FIELDNAMES = ['energy', 'power', 'power1', 'power2', 'power3', 'energyOut']
 
 
 class MockResponse:
@@ -44,8 +47,7 @@ class MockResponse:
 
 
 def mock_requests_post(*args, **kwargs):
-    """ Mock function requests.post() for
-    Discovergy:_fetch_consumer_tokens(). """
+    """ Mock function requests.post() for Discovergy:_fetch_consumer_tokens(). """
 
     return MockResponse(MOCK_RESPONSE_POST.encode(), 200)
 
@@ -72,10 +74,15 @@ def mock_oauth1session_fetch_access_token(*args, **kwargs):
 
 
 def mock_oauth1session_get_meters(*args, **kwargs):
-    """ Mock function OAuth1Session.get() for
-    Discovergy:get_meters(). """
+    """ Mock function OAuth1Session.get() for Discovergy:get_meters(). """
 
     return MockResponse(MOCK_RESPONSE_METERS.encode(), 200)
+
+
+def mock_oauth1session_get_fieldnames_for_meter(*args, **kwargs):
+    """ Mock function OAuth1Session.get() for Discovergy:get_meters()"""
+
+    return MockResponse(MOCK_RESPONSE_FIELDNAMES_FOR_METER.encode(), 200)
 
 
 class DiscovergyTestCase(unittest.TestCase):
@@ -230,6 +237,28 @@ class DiscovergyTestCase(unittest.TestCase):
         # Check return values
         self.assertEqual(list(meters[0].keys()), METER_KEYS)
         self.assertEqual(list(meters[0].get('location').keys()), LOCATION_KEYS)
+
+    @mock.patch('requests_oauthlib.OAuth1Session.get',
+                side_effect=mock_oauth1session_get_fieldnames_for_meter)
+    @mock.patch('requests.post', side_effect=mock_requests_post)
+    @mock.patch('requests.get', side_effect=mock_requests_get)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_access_token',
+                side_effect=mock_oauth1session_fetch_access_token)
+    @mock.patch('requests_oauthlib.OAuth1Session.fetch_request_token',
+                side_effect=mock_oauth1session_fetch_request_token)
+    def test_get_fieldnames_for_meter(self, mock_get_meters, mock_post, mock_get,
+                                      mock_fetch_access_token, mock_fetch_request_token):
+        """ Test function get_fieldnames_for_meter() of class Discovergy. """
+
+        d = Discovergy('TestClient')
+        login = d.login('test@test.com', '123test')
+        fieldnames = d.get_fieldnames_for_meter(METER_ID)
+
+        # Check result type
+        self.assertTrue(isinstance(fieldnames, list))
+
+        # Check result values
+        self.assertEqual(fieldnames, FIELDNAMES)
 
 
 if __name__ == "__main__":
