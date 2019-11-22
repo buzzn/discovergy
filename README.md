@@ -12,10 +12,10 @@ pip install -r "requirements.txt"
 ## Built With
 * Python 3
 
-## Include Module
+## Import Module
 ```
 git clone git@github.com:buzzn/discovergy.git
-include discovergy
+import discovergy
 ```
 
 ## Acknowledgements
