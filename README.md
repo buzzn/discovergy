@@ -23,7 +23,7 @@ virtualenv -p /path/to/python3/installation my_venv
 source my_venv/bin/activate 
 ```
 * Install module: `pip install .`
-* Run tests: `python -m unittest discover`
+* Run tests: `python -m unittest`
 
 ## Acknowledgements
 * [Discovergy API Documentation](https://api.discovergy.com/docs/)
