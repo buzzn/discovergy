@@ -239,8 +239,8 @@ class Discovergy:
                                                   meter_id + "&from=" +
                                                   str(start) +
                                                   "&resolution=" + resolution)
-            measurement = json.loads(response.content.decode("utf-8"))
-            return measurement
+            measurements = json.loads(response.content.decode("utf-8"))
+            return measurements
 
         except Exception as e:
             _LOGGER.error("Exception: %s", e)
