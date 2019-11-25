@@ -219,11 +219,12 @@ class Discovergy:
             _LOGGER.error("Exception: %s", e)
             return None
 
-    def get_readings(self, meter_id, start, resolution):
+    def get_readings(self, meter_id, start, end, resolution):
         """ Return the measurements for the specified meter in the specified
         time interval.
         :param str meter_id: identifier of the meter to get readings for
         :param int start: start of interval as unix milliseconds timestamp
+        :param int end: end of interval as unix milliseconds timestamp
         :param str resolution: time distance between returned
         readings with possible values 'raw', 'three_minutes',
         'fifteen_minutes', 'one_hour', 'one_day', 'one_week', 'one_month',
@@ -234,11 +235,20 @@ class Discovergy:
         :rtype: [dict] """
 
         try:
-            response = self._discovergy_oauth.get(self._base_url +
-                                                  "/readings?meterId=" +
-                                                  meter_id + "&from=" +
-                                                  str(start) +
-                                                  "&resolution=" + resolution)
+            if end is None:
+                response = self._discovergy_oauth.get(self._base_url +
+                                                      "/readings?meterId=" +
+                                                      meter_id + "&from=" +
+                                                      str(start) +
+                                                      "&resolution="
+                                                      + resolution)
+            else:
+                response = self._discovergy_oauth.get(self._base_url +
+                                                      "/readings?meterId=" +
+                                                      meter_id + "&from="
+                                                      + str(start) + "&to=" +
+                                                      str(end) + "&resolution="
+                                                      + resolution)
             measurements = json.loads(response.content.decode("utf-8"))
             return measurements
 
