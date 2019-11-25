@@ -370,7 +370,7 @@ class DiscovergyTestCase(unittest.TestCase):
         end = datetime.now()
         start = end - timedelta(hours=2)
         start = round(start.timestamp() * 1e3)
-        measurement = d.get_readings(METER_ID, start, 'one_hour')
+        measurement = d.get_readings(METER_ID, start, None, 'one_hour')
 
         # Check response type
         self.assertTrue(isinstance(measurement, list))
