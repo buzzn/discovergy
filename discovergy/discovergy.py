@@ -199,19 +199,25 @@ class Discovergy:
             _LOGGER.error("Exception: %s", e)
             return None
 
-    def get_disaggregation(self, meter_id, start):
+    def get_disaggregation(self, meter_id, start, end):
         """ Return the disaggregation for the specified meter in the specified
         time interval.
         :param str meter_id: identifier of the meter to get readings for
         :param int start: start of interval as unix milliseconds timestamp
+        :param int end: end of interval as unix milliseconds timestamp
         :return: existing measurements for the specified meter in μWh per device
         :rtype: dict """
 
         try:
-            response = self._discovergy_oauth.get(self._base_url +
-                                                  "/disaggregation?meterId=" +
-                                                  meter_id + "&from=" +
-                                                  str(start))
+            if end is None:
+                response = self._discovergy_oauth.get(
+                    self._base_url + "/disaggregation?meterId=" + meter_id + "&from=" + str(start))
+            else:
+                response = self._discovergy_oauth.get(self._base_url +
+                                                      "/disaggregation?meterId="
+                                                      + meter_id + "&from=" +
+                                                      str(start) + "&to=" +
+                                                      str(end))
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
 

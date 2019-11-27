@@ -346,7 +346,8 @@ class DiscovergyTestCase(unittest.TestCase):
         end = datetime.now()
         start = end - timedelta(hours=11)
         start = round(start.timestamp() * 1e3)
-        measurement = d.get_disaggregation(METER_ID, start)
+        end = round(end.timestamp() * 1e3)
+        measurement = d.get_disaggregation(METER_ID, start, end)
 
         # Check result type
         self.assertTrue(isinstance(measurement, dict))
