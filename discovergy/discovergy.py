@@ -1,5 +1,4 @@
 import json
-import os
 import logging
 from urllib.parse import parse_qs
 import requests
@@ -59,8 +58,6 @@ class Discovergy:
             request_token_oauth = OAuth1Session(self._oauth_key,
                                                 client_secret=self._oauth_secret,
                                                 callback_uri='oob')
-            if os.environ('TESTING') is True:
-                request_token_oauth.close()
             oauth_token_response = request_token_oauth.fetch_request_token(
                 self._request_token_url)
             result = {"token": oauth_token_response.get('oauth_token'),
