@@ -258,7 +258,8 @@ class Discovergy:
             measurements = json.loads(response.content.decode("utf-8"))
             return measurements
 
-        except Exception as e:
+        except ValueError as e:
+            # except Exception as e:
             _LOGGER.error("Exception: %s", e)
             return None
 
