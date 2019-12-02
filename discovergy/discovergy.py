@@ -178,7 +178,7 @@ class Discovergy:
             fieldnames = json.loads(response.content.decode("utf-8"))
             return fieldnames
 
-        except Exception as e:
+        except ValueError as e:
             _LOGGER.error("Exception: %s", str(e))
             return []
 
@@ -195,7 +195,7 @@ class Discovergy:
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
 
-        except Exception as e:
+        except ValueError as e:
             _LOGGER.error("Exception: %s", e)
             return None
 
@@ -221,7 +221,7 @@ class Discovergy:
             measurement = json.loads(response.content.decode("utf-8"))
             return measurement
 
-        except Exception as e:
+        except ValueError as e:
             _LOGGER.error("Exception: %s", e)
             return None
 
@@ -282,6 +282,6 @@ class Discovergy:
             activities = json.loads(response.content.decode("utf-8"))
             return activities
 
-        except Exception as e:
+        except ValueError as e:
             _LOGGER.error("Exception: %s", e)
             return None
