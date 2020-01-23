@@ -7,6 +7,7 @@ from requests_oauthlib import OAuth1Session
 
 logger = logging.getLogger(__name__)
 TIMEOUT = 10
+exception_template = "An exception of type {0} occurred. Arguments:\n{1!r}"
 
 
 class Discovergy:
@@ -46,7 +47,8 @@ class Discovergy:
             return response
 
         except Exception as e:
-            logger.error("Exception: %s", e)
+            message = exception_template.format(type(e).__name__, e.args)
+            logger.error(message)
             return None
 
     def _fetch_request_token(self):
@@ -65,7 +67,8 @@ class Discovergy:
             return result
 
         except Exception as e:
-            logger.error("Exception: %s", e)
+            message = exception_template.format(type(e).__name__, e.args)
+            logger.error(message)
             return None
 
     def _authorize_request_token(self, email, password, resource_owner_key):
@@ -86,7 +89,8 @@ class Discovergy:
             return verifier
 
         except Exception as e:
-            logger.error("Exception: %s", e)
+            message = exception_template.format(type(e).__name__, e.args)
+            logger.error(message)
             return ""
 
     def _fetch_access_token(self, resource_owner_key, resource_owner_secret,
@@ -112,7 +116,8 @@ class Discovergy:
             return result
 
         except Exception as e:
-            logger.error("Exception: %s", e)
+            message = exception_template.format(type(e).__name__, e.args)
+            logger.error(message)
             return None
 
     def login(self, email, password):
@@ -144,7 +149,8 @@ class Discovergy:
             return False
 
         except Exception as e:
-            logger.error("Exception: %s", e)
+            message = exception_template.format(type(e).__name__, e.args)
+            logger.error(message)
             return False
 
         else:
@@ -161,7 +167,8 @@ class Discovergy:
             return meters
 
         except Exception as e:
-            logger.error("Exception: %s", e)
+            message = exception_template.format(type(e).__name__, e.args)
+            logger.error(message)
             return []
 
     def get_fieldnames_for_meter(self, meter_id):
