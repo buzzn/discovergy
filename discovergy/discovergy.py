@@ -42,14 +42,20 @@ class Discovergy:
                                      data={'client': self._client_name},
                                      headers={},
                                      timeout=TIMEOUT)
-            self._oauth_key = response.json()['key']
-            self._oauth_secret = response.json()['secret']
-            return response
-
         except Exception as e:
-            message = exception_template.format(type(e).__name__, e.args)
-            logger.error(message)
-            return None
+            logger.error('Failed consumer token request: %s', e)
+
+        try:
+            self._oauth_key = response.json()['key']
+        except Exception as e:
+            logger. error('Missing key in response: %s', e)
+
+        try:
+            self._oauth_secret = response.json()['secret']
+        except Exception as e:
+            logger.error('Missing secret in response: %s', e)
+
+        return response
 
     def _fetch_request_token(self):
         """ Get OAuth request token.
@@ -60,16 +66,17 @@ class Discovergy:
             request_token_oauth = OAuth1Session(self._oauth_key,
                                                 client_secret=self._oauth_secret,
                                                 callback_uri='oob')
-            oauth_token_response = request_token_oauth.fetch_request_token(
-                self._request_token_url)
+        except Exception as e:
+            logger.error('Failed to create OAuth1Session: %s', e)
+
+        try:
+            oauth_token_response = request_token_oauth.fetch_request_token(self._request_token_url)
             result = {"token": oauth_token_response.get('oauth_token'),
                       "token_secret": oauth_token_response.get('oauth_token_secret')}
-            return result
-
         except Exception as e:
-            message = exception_template.format(type(e).__name__, e.args)
-            logger.error(message)
-            return None
+            logger.error('Failed to create oauth_token_response: %s', e)
+
+        return result
 
     def _authorize_request_token(self, email, password, resource_owner_key):
         """ Authorize request token for client account.
@@ -84,14 +91,16 @@ class Discovergy:
             url = self._authorization_base_url + "?oauth_token=" + \
                 resource_owner_key + "&email=" + email + "&password=" + password
             response = requests.get(url, headers={}, timeout=TIMEOUT)
+        except Exception as e:
+            logger.error('Failed authorization request: %s', e)
+
+        try:
             parsed_response = parse_qs(response.content.decode('utf-8'))
             verifier = parsed_response["oauth_verifier"][0]
-            return verifier
-
         except Exception as e:
-            message = exception_template.format(type(e).__name__, e.args)
-            logger.error(message)
-            return ""
+            logger.error('Failed to parse response: %s', e)
+
+        return verifier
 
     def _fetch_access_token(self, resource_owner_key, resource_owner_secret,
                             verifier):
@@ -109,16 +118,18 @@ class Discovergy:
                                                resource_owner_key=resource_owner_key,
                                                resource_owner_secret=resource_owner_secret,
                                                verifier=verifier)
+        except Exception as e:
+            logger.error('Failed to create OAuth1Session: %s', e)
+
+        try:
             oauth_tokens = access_token_oauth.fetch_access_token(
                 self._access_token_url)
             result = {"token": oauth_tokens.get('oauth_token'),
                       "token_secret": oauth_tokens.get('oauth_token_secret')}
-            return result
-
         except Exception as e:
-            message = exception_template.format(type(e).__name__, e.args)
-            logger.error(message)
-            return None
+            logger.error('Failed to create oauth_tokens: %s', e)
+        return result
+
 
     def login(self, email, password):
         """ Authentication workflow for client account.
@@ -127,30 +138,46 @@ class Discovergy:
         :return: True on success, False on failure
         :rtype: bool """
 
+        self._fetch_consumer_tokens()
+        request_tokens = self._fetch_request_token()
+
         try:
-            self._fetch_consumer_tokens()
-            request_tokens = self._fetch_request_token()
             resource_owner_key = request_tokens["token"]
+        except Exception as e:
+            logger.error('Missing token in request_tokens: %s', e)
+            return False
+
+        try:
             resource_owner_secret = request_tokens["token_secret"]
-            verifier = self._authorize_request_token(email, password,
-                                                     resource_owner_key)
-            access_token = self._fetch_access_token(resource_owner_key,
-                                                    resource_owner_secret,
-                                                    verifier)
+        except Exception as e:
+            logger.error('Missing token_secret in request_tokens: %s', e)
+            return False
+
+        verifier = self._authorize_request_token(email, password,
+                                                 resource_owner_key)
+        access_token = self._fetch_access_token(resource_owner_key,
+                                                resource_owner_secret,
+                                                verifier)
+
+        try:
             resource_owner_key = access_token["token"]
+        except Exception as e:
+            logger.error('Missing token in access_token: %s', e)
+            return False
+
+        try:
             resource_owner_secret = access_token["token_secret"]
+        except Exception as e:
+            logger.error('Missing token_secret in access_token: %s', e)
+            return False
+
+        try:
             self._discovergy_oauth = OAuth1Session(self._oauth_key,
                                                    client_secret=self._oauth_secret,
                                                    resource_owner_key=resource_owner_key,
                                                    resource_owner_secret=resource_owner_secret)
-
-        except requests.exceptions.HTTPError as e:
-            logger.error("HTTPError: %s", e)
-            return False
-
         except Exception as e:
-            message = exception_template.format(type(e).__name__, e.args)
-            logger.error(message)
+            logger.error('Failed to create OAuth1Session: %s', e)
             return False
 
         else:
