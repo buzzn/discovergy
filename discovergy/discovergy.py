@@ -44,16 +44,19 @@ class Discovergy:
                                      timeout=TIMEOUT)
         except Exception as e:
             logger.error('Failed consumer token request: %s', e)
+            return None
 
         try:
             self._oauth_key = response.json()['key']
         except Exception as e:
-            logger. error('Missing key in response: %s', e)
+            logger.error('Missing key in response: %s', e)
+            return None
 
         try:
             self._oauth_secret = response.json()['secret']
         except Exception as e:
             logger.error('Missing secret in response: %s', e)
+            return None
 
         return response
 
@@ -68,6 +71,7 @@ class Discovergy:
                                                 callback_uri='oob')
         except Exception as e:
             logger.error('Failed to create OAuth1Session: %s', e)
+            return None
 
         try:
             oauth_token_response = request_token_oauth.fetch_request_token(self._request_token_url)
@@ -75,6 +79,7 @@ class Discovergy:
                       "token_secret": oauth_token_response.get('oauth_token_secret')}
         except Exception as e:
             logger.error('Failed to create oauth_token_response: %s', e)
+            return None
 
         return result
 
@@ -93,12 +98,13 @@ class Discovergy:
             response = requests.get(url, headers={}, timeout=TIMEOUT)
         except Exception as e:
             logger.error('Failed authorization request: %s', e)
-
+            return ""
         try:
             parsed_response = parse_qs(response.content.decode('utf-8'))
             verifier = parsed_response["oauth_verifier"][0]
         except Exception as e:
             logger.error('Failed to parse response: %s', e)
+            return ""
 
         return verifier
 
@@ -120,6 +126,7 @@ class Discovergy:
                                                verifier=verifier)
         except Exception as e:
             logger.error('Failed to create OAuth1Session: %s', e)
+            return None
 
         try:
             oauth_tokens = access_token_oauth.fetch_access_token(
@@ -128,6 +135,8 @@ class Discovergy:
                       "token_secret": oauth_tokens.get('oauth_token_secret')}
         except Exception as e:
             logger.error('Failed to create oauth_tokens: %s', e)
+            return None
+
         return result
 
 
