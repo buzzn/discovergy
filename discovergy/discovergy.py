@@ -43,17 +43,19 @@ class Discovergy:
                                      headers={},
                                      timeout=TIMEOUT)
         except Exception as e:
+            logger.error('Failed request post:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return None
 
         if not response.status_code == 200:
-            logger.error("Failed to create consumer token")
+            logger.error("Failed to create consumer token.")
             return None
 
         try:
             self._oauth_key = response.json()['key']
         except Exception as e:
+            logger.error('Missing key in response:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return None
@@ -61,6 +63,7 @@ class Discovergy:
         try:
             self._oauth_secret = response.json()['secret']
         except Exception as e:
+            logger.error('Missing secret in response')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return None
@@ -77,6 +80,7 @@ class Discovergy:
                                                 client_secret=self._oauth_secret,
                                                 callback_uri='oob')
         except Exception as e:
+            logger.error('Failed to create OAuth1Session:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return None
@@ -86,6 +90,7 @@ class Discovergy:
             result = {"token": oauth_token_response.get('oauth_token'),
                       "token_secret": oauth_token_response.get('oauth_token_secret')}
         except Exception as e:
+            logger.error('Failed to create oauth_token_response:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return None
@@ -106,18 +111,21 @@ class Discovergy:
                 resource_owner_key + "&email=" + email + "&password=" + password
             response = requests.get(url, headers={}, timeout=TIMEOUT)
         except Exception as e:
+            logger.error('Failed authorization request:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return ""
 
         if not response.status_code == 200:
-            logger.error("Failed to login. Please check if your email and password are correct.")
+            logger.error("Failed to login. "
+                         "Please check if your email and password are correct and try again.")
             return ""
 
         try:
             parsed_response = parse_qs(response.content.decode('utf-8'))
             verifier = parsed_response["oauth_verifier"][0]
         except Exception as e:
+            logger.error('Failed to parse response:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return ""
@@ -141,6 +149,7 @@ class Discovergy:
                                                resource_owner_secret=resource_owner_secret,
                                                verifier=verifier)
         except Exception as e:
+            logger.error('Failed to create OAuth1Session:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return None
@@ -151,6 +160,7 @@ class Discovergy:
             result = {"token": oauth_tokens.get('oauth_token'),
                       "token_secret": oauth_tokens.get('oauth_token_secret')}
         except Exception as e:
+            logger.error('Failed to create oauth_tokens:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return None
@@ -171,6 +181,7 @@ class Discovergy:
         try:
             resource_owner_key = request_tokens["token"]
         except Exception as e:
+            logger.error('Missing token in request_tokens:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return False
@@ -178,6 +189,7 @@ class Discovergy:
         try:
             resource_owner_secret = request_tokens["token_secret"]
         except Exception as e:
+            logger.error('Missing token_secret in request_tokens:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return False
@@ -191,6 +203,7 @@ class Discovergy:
         try:
             resource_owner_key = access_token["token"]
         except Exception as e:
+            logger.error('Missing token in access_token:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return False
@@ -198,6 +211,7 @@ class Discovergy:
         try:
             resource_owner_secret = access_token["token_secret"]
         except Exception as e:
+            logger.error('Missing token_secret in access_token:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return False
@@ -208,6 +222,7 @@ class Discovergy:
                                                    resource_owner_key=resource_owner_key,
                                                    resource_owner_secret=resource_owner_secret)
         except Exception as e:
+            logger.error('Failed to create OAuth1Session:')
             message = exception_template.format(type(e).__name__, e.args)
             logger.error(message)
             return False
