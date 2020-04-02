@@ -136,7 +136,7 @@ class Discovergy:
                             verifier):
         """ Get OAuth access token.
         :param resource_owner_key: the resource owner key obtained from calling
-        :param resouce_owner_secret: the resource owner secret obtained from
+        :param resource_owner_secret: the resource owner secret obtained from
         calling _fetch_request_token()
         :param verifier: the verifier obtained from calling _authorize_request_token()
         :return: token and token_secret on success, None otherwise
@@ -166,7 +166,6 @@ class Discovergy:
             return None
 
         return result
-
 
     def login(self, email, password):
         """ Authentication workflow for client account.
